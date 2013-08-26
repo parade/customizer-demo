@@ -119,7 +119,7 @@ function customizer_demo_preview_type( $previewed_url = null ) {
 	}
 	$previewed_url = apply_filters( 'customizer_demo_preview_url', $previewed_url );
 	if ( empty( $previewed_url ) ) {
-		return;
+		return apply_filters( 'customizer_demo_preview_type', array( 'url' => null, 'id' => null, 'type' => null ) );
 	}
 	//next step: figure out what kind of page the
 	//$previewed_url represents
@@ -164,15 +164,30 @@ function customizer_demo_preview_type( $previewed_url = null ) {
 
 /* Register Sections */
 
-function customizer_demo_sections() {
-
-}
-
-function customizer_wrapper_sections() {
-	customizer_wrapper_clear_sections();
-	error_log( "customizer_wrapper_sections()" );
+function customizer_demo_sections( $sections = array() ) {
 	$type = customizer_demo_preview_type();
-	error_log( json_encode( "TYPE: " . json_encode( $type ) ) );
+	if ( 'single' === $type[ 'type' ] ) { 
+		$sections[] = array(
+			'slug' => 'customizer-demo-single',
+			'title' => 'Post tools',
+			'priority' => 20
+		);
+	}
+	return $sections;
+}
+add_filter( 'customizer_wrapper_sections', 'customizer_demo_sections', 20, 1 );
+
+function customizer_wrapper_sections( $wp_customize ) {
+	customizer_wrapper_clear_sections();
+	$sections  = apply_filters( 'customizer_wrapper_sections', array() );
+	error_log( "customizer_wrapper_sections()"  . json_encode( $sections ) );
+	foreach ( $sections as $section ) {
+		$wp_customize->add_section( $section[ 'slug' ], array(
+			'title' => empty( $section[ 'title' ] ) ? null : $section[ 'title' ],
+			'theme_supports' => empty( $section[ 'theme_supports' ] ) ? null : $section[ 'theme_supports' ],
+			'priority' => empty( $section[ 'priority' ] ) ? null : $section[ 'priority' ]
+		) );
+	}
 }
 add_action( 'customize_register', 'customizer_wrapper_sections', 100, 1 );
 
@@ -191,15 +206,6 @@ function customizer_wrapper_remove_default_sections() {
 	foreach ( $sections as $section ) {
 		$wp_customize->remove_section( $section );
 	}
-	$settings = array( 'blogname', 'blogdescription', 'header_textcolor', 'background_color', 'header_image', 'header_image_data', 'background_image', 'background_image_thumb', 'background_repeat', 'background_position_x', 'background_attachment', 'show_on_front', 'page_on_front', 'page_for_posts' );
-	foreach ( $settings as $setting ) {
-		$wp_customize->remove_setting( $setting );
-	}
-	$controls = array( 'blogname', 'blogdescription', 'display_header_text', 'header_textcolor', 'background_color', 'background_image_thumb', 'header_image_data', 'background_repeat', 'background_position_x', 'background_attachment', 'show_on_front', 'page_on_front', 'page_for_posts' );
-	foreach ( $controls as $control ) {
-		$wp_customize->remove_control( $control );
-	}
-
 }
 
 function customizer_wrapper_hide_default_header() {
@@ -215,8 +221,6 @@ function customizer_wrapper_print_styles() {
 CSS;
 }
 
-
-
 /* 
 	customize_preview_init //enqueue
 	customize_controls_print_footer_scripts
@@ -228,9 +232,197 @@ CSS;
 
 //core example: https://github.com/WordPress/WordPress/blob/master/wp-includes/class-wp-customize-manager.php#L723
 
-/* Add Controls */
+function customizer_demo_settings( $settings = array() ) {
+	$type = customizer_demo_preview_type();
+	if ( 'single' === $type[ 'type' ] ) {
 
+		$settings[] = array(
+			'slug' => 'customizer-demo-single-checkbox',
+			'default' => true,
+			'capability' => 'edit_others_posts'
+		);
+
+		$settings[] = array(
+			'slug' => 'customizer-demo-single-radio',
+			'default' => 'two',
+			'capability' => 'edit_others_posts'
+		);
+
+		$settings[] = array(
+			'slug' => 'customizer-demo-single-text',
+			'default' => 'default text',
+			'capability' => 'edit_others_posts'
+		);
+
+		$settings[] = array(
+			'slug' => 'customizer-demo-single-select',
+			'default' => 'two',
+			'capability' => 'edit_others_posts'
+		);
+
+		$settings[] = array(
+			'slug' => 'customizer-demo-single-image',
+			'default' => 'http://www.google.com/images/errors/logo_sm.gif',
+			'capability' => 'edit_others_posts'
+		);
+
+		$settings[] = array(
+			'slug' => 'customizer-demo-single-color',
+			'default' => '#336699',
+			'capability' => 'edit_others_posts'
+		);
+
+
+
+	}
+	return $settings;
+}
+add_filter( 'customizer_wrapper_settings', 'customizer_demo_settings', 20, 1 );
+
+function customizer_wrapper_settings( $wp_customize ) {
+	customizer_wrapper_remove_default_settings();
+	$settings = apply_filters( 'customizer_wrapper_settings', array() );
+	foreach ( $settings as $setting ) {
+		$wp_customize->add_setting( $setting[ 'slug' ], array(
+			'default' => empty( $setting[ 'default' ] ) ? null : $setting[ 'default' ],
+			'capability' => empty( $setting[ 'capability' ] ) ? null : $setting[ 'capability' ],
+			'theme_supports' => empty( $setting[ 'theme_supports' ] ) ? null : $setting[ 'theme_supports' ],
+			'sanitize_callback' => empty( $setting[ 'sanitize_callback' ] ) ? null : $setting[ 'sanitize_callback' ],
+			'sanitize_js_callback' => empty( $setting[ 'sanitize_js_callback' ] ) ? null : $setting[ 'sanitize_js_callback' ]
+		) );
+	}
+}
+add_action( 'customize_register', 'customizer_wrapper_settings', 100, 1 );
+
+function customizer_wrapper_remove_default_settings() {
+	global $wp_customize;
+	$settings = array( 'blogname', 'blogdescription', 'header_textcolor', 'background_color', 'header_image', 'header_image_data', 'background_image', 'background_image_thumb', 'background_repeat', 'background_position_x', 'background_attachment', 'show_on_front', 'page_on_front', 'page_for_posts' );
+	foreach ( $settings as $setting ) {
+		$wp_customize->remove_setting( $setting );
+	}
+}
+
+/* Add Controls */
 //core example: https://github.com/WordPress/WordPress/blob/master/wp-includes/class-wp-customize-manager.php#L729
+
+function customizer_demo_controls( $controls = array() ) {
+	$type = customizer_demo_preview_type();
+	if ( 'single' === $type[ 'type' ] ) {
+
+		//checkbox
+		$controls[] = array(
+			'slug' => 'customizer-demo-single-checkbox',
+			'settings' => 'customizer-demo-single-checkbox',
+			'label' => 'Example Checkbox',
+			'type' => 'checkbox',
+			'section' => 'customizer-demo-single'
+		);
+
+		//text
+		$controls[] = array(
+			'slug' => 'customizer-demo-single-text',
+			'settings' => 'customizer-demo-single-text',
+			'label' => 'Example Textfield',
+			'type' => 'text',
+			'section' => 'customizer-demo-single'
+		);
+
+		//radio
+		$controls[] = array(
+			'slug' => 'customizer-demo-single-radio',
+			'settings' => 'customizer-demo-single-radio',
+			'label' => 'Example Radio',
+			'type' => 'radio',
+			'choices' => array(
+				'one' => 'One',
+				'two' => 'Two',
+				'three' => 'Three'
+			),
+			'section' => 'customizer-demo-single'
+		);
+
+		//select
+		$controls[] = array(
+			'slug' => 'customizer-demo-single-select',
+			'settings' => 'customizer-demo-single-select',
+			'label' => 'Example Select',
+			'type' => 'select',
+			'choices' => array(
+				'one' => 'One',
+				'two' => 'Two',
+				'three' => 'Three'
+			),
+			'section' => 'customizer-demo-single'
+		);
+
+		//image
+		$controls[] = array(
+			'slug' => 'customizer-demo-single-image',
+			'settings' => 'customizer-demo-single-image',
+			'label' => 'Example Image',
+			'type' => 'image',
+			'section' => 'customizer-demo-single'
+		);
+
+		//color
+		$controls[] = array(
+			'slug' => 'customizer-demo-single-color',
+			'settings' => 'customizer-demo-single-color',
+			'label' => 'Example Color',
+			'type' => 'color',
+			'section' => 'customizer-demo-single'
+		);
+
+
+
+	}
+	return $controls;
+}
+add_filter( 'customizer_wrapper_controls', 'customizer_demo_controls', 20, 1 );
+
+function customizer_wrapper_controls( $wp_customize ) {
+	customizer_wrapper_remove_default_controls();
+	$controls = apply_filters( 'customizer_wrapper_controls', array() );
+	foreach ( $controls as $control ) {
+		if ( 'image' === $control[ 'type' ] ) {
+			$wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, empty( $control[ 'settings' ] ) ? null : $control[ 'settings' ],
+				array(
+					'label' => empty( $control[ 'label' ] ) ? null : $control[ 'label' ],
+					'section' => empty( $control[ 'section' ] ) ? null : $control[ 'section' ],
+					'settings' => empty( $control[ 'settings' ] ) ? null : $control[ 'settings' ],
+					'priority' => empty( $control[ 'priority' ] ) ? null : $control[ 'priority' ]
+				)
+			) );
+		} else if ( 'color' === $control[ 'type' ] ) {
+			$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, empty( $control[ 'settings' ] ) ? null : $control[ 'settings' ],
+				array(
+					'label' => empty( $control[ 'label' ] ) ? null : $control[ 'label' ],
+					'section' => empty( $control[ 'section' ] ) ? null : $control[ 'section' ],
+					'settings' => empty( $control[ 'settings' ] ) ? null : $control[ 'settings' ],
+					'priority' => empty( $control[ 'priority' ] ) ? null : $control[ 'priority' ]
+				)
+			) );
+		} else {
+			$wp_customize->add_control( $control[ 'slug' ], array(
+				'settings' => empty( $control[ 'settings' ] ) ? null : $control[ 'settings' ],
+				'label' => empty( $control[ 'label' ] ) ? null : $control[ 'label' ],
+				'section' => empty( $control[ 'section' ] ) ? null : $control[ 'section' ],
+				'type' => empty( $control[ 'type' ] ) ? null : $control[ 'type' ],
+				'choices' => empty( $control[ 'choices' ] ) ? null : $control[ 'choices' ]
+			) );
+		}
+	}
+}
+add_action( 'customize_register', 'customizer_wrapper_controls', 100, 1 );
+
+function customizer_wrapper_remove_default_controls() {
+	global $wp_customize;
+	$controls = array( 'blogname', 'blogdescription', 'display_header_text', 'header_textcolor', 'background_color', 'background_image_thumb', 'header_image_data', 'background_repeat', 'background_position_x', 'background_attachment', 'show_on_front', 'page_on_front', 'page_for_posts' );
+	foreach ( $controls as $control ) {
+		$wp_customize->remove_control( $control );
+	}
+}
+
 
 /* Handle Changes */
 
