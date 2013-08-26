@@ -180,7 +180,6 @@ add_filter( 'customizer_wrapper_sections', 'customizer_demo_sections', 20, 1 );
 function customizer_wrapper_sections( $wp_customize ) {
 	customizer_wrapper_clear_sections();
 	$sections  = apply_filters( 'customizer_wrapper_sections', array() );
-	error_log( "customizer_wrapper_sections()"  . json_encode( $sections ) );
 	foreach ( $sections as $section ) {
 		$wp_customize->add_section( $section[ 'slug' ], array(
 			'title' => empty( $section[ 'title' ] ) ? null : $section[ 'title' ],
@@ -232,6 +231,8 @@ CSS;
 
 //core example: https://github.com/WordPress/WordPress/blob/master/wp-includes/class-wp-customize-manager.php#L723
 
+//can be of type option, theme_mod or arbitrary: https://github.com/WordPress/WordPress/blob/master/wp-includes/class-wp-customize-setting.php#L159
+
 function customizer_demo_settings( $settings = array() ) {
 	$type = customizer_demo_preview_type();
 	if ( 'single' === $type[ 'type' ] ) {
@@ -260,19 +261,20 @@ function customizer_demo_settings( $settings = array() ) {
 			'capability' => 'edit_others_posts'
 		);
 
+		//$val = wp_get_attachment_image_src( get_user_meta( $user_id, $skin_top_setting, true ), 'full' )[ 0 ];
 		$settings[] = array(
 			'slug' => 'customizer-demo-single-image',
 			'default' => 'http://www.google.com/images/errors/logo_sm.gif',
-			'capability' => 'edit_others_posts'
+			'capability' => 'edit_others_posts',
+			'type' => 'crazy_type'
 		);
 
 		$settings[] = array(
 			'slug' => 'customizer-demo-single-color',
 			'default' => '#336699',
-			'capability' => 'edit_others_posts'
+			'capability' => 'edit_others_posts',
+			'type' => 'crazy_type'
 		);
-
-
 
 	}
 	return $settings;
@@ -373,8 +375,6 @@ function customizer_demo_controls( $controls = array() ) {
 			'section' => 'customizer-demo-single'
 		);
 
-
-
 	}
 	return $controls;
 }
@@ -428,7 +428,76 @@ function customizer_wrapper_remove_default_controls() {
 
 /* Handle Submissions */
 
-/* Downside - how do you replicate filters such as autop client-side? */
+/* 
+{
+    "customizer-demo-single-checkbox": true,
+    "customizer-demo-single-radio": "two",
+    "customizer-demo-single-text": "default text",
+    "customizer-demo-single-select": "two",
+    "customizer-demo-single-image": "http:\/\/example.com\/wp-content\/uploads\/2013\/08\/942538_732791487998_1267339575_n1.jpg",
+    "customizer-demo-single-color": "#336699"
+}
+ */
+
+function customizer_demo_save( $wp_customize, $data, $type, $controls ) {
+	foreach ( $data as $slug => $value ) {
+		if ( 'single' === $type[ 'type' ] ) {
+			$item = $controls[ $slug ];
+			$control = $item[ 'control' ];
+			$default = $control->settings[ 'default' ]->default;
+			if ( 'customizer-demo-single-image' === $slug ) {
+				$attachment = customizer_wrapper_attachment_by_url( $value );
+				if ( null !== $attachment ) {
+					$value = $attachment->ID;
+				}
+			}
+			if ( empty( $value ) || $value === $default ) {
+				delete_post_meta( $type[ 'id' ], $slug );				
+			} else {
+				if ( false === $value ) {
+					$value = 0;
+				} else if ( true === $value ) {
+					$value = 1;
+				}
+				update_post_meta( $type[ 'id' ], $slug, $value );
+			}
+		}
+	}
+
+}
+add_filter( 'customizer_wrapper_save', 'customizer_demo_save', 20, 4 );
+
+function customizer_wrapper_save( $wp_customize ) {
+	$data = get_object_vars( json_decode( stripslashes( $_POST[ 'customized' ] ) ) );
+	$type = customizer_demo_preview_type();
+	$controls = array();
+	foreach ( $data as $slug => $value ) {
+		$type_slug = null;
+		if ( is_a( $control, 'WP_Customize_Image_Control' ) ) {
+			$type_slug = 'image';
+		} else if ( is_a( $control, 'WP_Customize_Color_Control' ) ) {
+			$type_slug = 'color';
+		} else {
+			if ( isset( $control->type ) ) {
+				$type_slug = $control->type;
+			}
+		}
+		$control = $wp_customize->get_control( $slug );
+		$controls[ $slug ] = array( 'control' => $control, 'type' => $type_slug );
+		do_action( 'customizer_wrapper_saved_' . $slug, $value, $wp_customize, $type, $controls[ $slug ] );
+	}
+	do_action( 'customizer_wrapper_save', $data, $data, $type, $controls );
+}
+add_action( 'customize_save', 'customizer_wrapper_save', 20, 1 );
+
+function customizer_wrapper_attachment_by_url( $src ) {
+	if ( empty( $src ) ) {
+		return null;
+	}
+	global $wpdb;
+	return $wpdb->get_row( $wpdb->prepare( "SELECT {$wpdb->prefix}posts.* FROM {$wpdb->prefix}posts WHERE guid = %s AND post_status = 'inherit' ORDER BY post_date_gmt DESC LIMIT 1", $src ), "OBJECT" );
+}
+
 
 //required w/WP versions less than 3.6
 //http://core.trac.wordpress.org/attachment/ticket/23509/23509.diff
