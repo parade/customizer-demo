@@ -18,7 +18,7 @@ function customizer_demo_prefix() {
 function customizer_demo_static() {
 	wp_enqueue_script(
 		'customizer_demo_static',
-		plugins_url( 'static/frontend.js', __FILE__ ),
+		plugins_url( 'frontend.js', __FILE__ ),
 		array( 'jquery','customize-preview' ),
 		'1.0',
 		true
@@ -326,7 +326,8 @@ function customizer_demo_maybe_change_color() {
 		if ( false === empty( $color ) ) {
 			echo <<<CSS
 <style type="text/css">
-	.site-header { background-color: {$color} !important; }
+	.site-title { color: {$color}; }
+	.site-description { color: {$color}; }
 </style>
 CSS;
 		}
@@ -370,7 +371,7 @@ function customizer_demo_maybe_hide_bar() {
 		if ( 'hiding' === $bar ) {
 			echo <<<CSS
 <style type="text/css">
-	#navbar { display: none !important; }
+	#navbar { display: none; }
 </style>
 CSS;
 		}
