@@ -102,7 +102,7 @@ function customizer_demo_settings( $settings = array() ) {
 		//text
 		$key = $prefix . 'single-text';
 		$value = get_post_meta( $post_id, $key, true );
-		$value = empty( $value ) ? bloginfo( 'description' ) : $value;
+		$value = empty( $value ) ? get_bloginfo( 'description' ) : $value;
 		$settings[] = array(
 			'slug' => $key,
 			'default' => $value,
@@ -170,7 +170,7 @@ function customizer_demo_controls( $controls = array() ) {
 		$controls[] = array(
 			'slug' => $prefix . 'single-text',
 			'settings' => $prefix . 'single-text',
-			'label' => 'Tagline',
+			'label' => 'Sitename',
 			'type' => 'text',
 			'section' => $prefix . 'single'
 		);
@@ -240,13 +240,15 @@ add_filter( 'customizer_wrapper_controls', 'customizer_demo_controls', 20, 1 );
 
 function customizer_demo_save( $data, $wp_customize, $type, $controls ) {
 	$type = customizer_wrapper_preview_type();
+	$prefix = customizer_demo_prefix();
 	if ( 'single' === $type[ 'type' ] ) {
 		foreach ( $data as $slug => $value ) {
 			$item = $controls[ $slug ];
 			//say you wanted to pull data from the original control
 			//$control = $item[ 'control' ];
 			//$default = $control->settings[ 'default' ]->default;
-			if ( 'customizer-demo-single-image' === $slug ) {
+			$delete = false;
+			if ( $prefix . 'single-image' === $slug ) {
 				$attachment = customizer_wrapper_attachment_by_url( $value );
 				if ( null !== $attachment ) {
 					$value = $attachment->ID;
@@ -257,14 +259,11 @@ function customizer_demo_save( $data, $wp_customize, $type, $controls ) {
 			} else if ( false === $value ) {
 				$value = 'false';
 			}
-			if ( empty( $value ) ) {
+		
+			if ( true === empty( $value ) ) {
 				delete_post_meta( $type[ 'id' ], $slug );				
 			} else {
-				if ( false === $value ) {
-					$value = 'false';
-				} else if ( true === $value ) {
-					$value = 'true';
-				}
+				error_log("UPDATE $slug");
 				update_post_meta( $type[ 'id' ], $slug, $value );
 			}
 		}
@@ -353,7 +352,7 @@ function customizer_demo_maybe_change_font_size() {
 			echo <<<CSS
 <style type="text/css">
 	 .entry-content { font-size: {$px}px !important; }
-     h1 { font-size:{$hpx}px !important;
+     h1 { font-size:{$hpx}px !important; }
 </style>
 CSS;
 		}
