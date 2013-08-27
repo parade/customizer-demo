@@ -47,7 +47,7 @@ function customizer_demo_sections( $sections = array() ) {
 
 		$sections[] = array(
 			'slug' => $prefix . 'single',
-			'title' => 'Post tools',
+			'title' => 'Customize Post',
 			'priority' => 20
 		);
 
@@ -113,7 +113,7 @@ function customizer_demo_settings( $settings = array() ) {
 		//select
 		$key = $prefix . 'single-select';
 		$value = get_post_meta( $post_id, $key, true );
-		$value = empty( $value ) ? 'two' : $value; 
+		$value = empty( $value ) ? 'showing' : $value; 
 		$settings[] = array(
 			'slug' => $key,
 			'default' => $value,
@@ -252,6 +252,11 @@ function customizer_demo_save( $data, $wp_customize, $type, $controls ) {
 					$value = $attachment->ID;
 				}
 			}
+			if ( true === $value ) {
+				$value = 'true';
+			} else if ( false === $value ) {
+				$value = 'false';
+			}
 			if ( empty( $value ) ) {
 				delete_post_meta( $type[ 'id' ], $slug );				
 			} else {
@@ -281,21 +286,23 @@ function customizer_demo_maybe_filter_blogname( $title = '' ) {
 	}
 	return $title;
 }
-//add_filter( 'pre_option_blogname', 'customizer_demo_maybe_filter_blogname', 10, 1 );
+add_filter( 'pre_option_blogname', 'customizer_demo_maybe_filter_blogname', 10, 1 );
 
-
-function customizer_demo_maybe_filter_description( $description = '' ) {
+function customizer_demo_maybe_hide_description() {
 	if ( true === is_single() ) {
 		$prefix = customizer_demo_prefix();
 		global $post;
-		$meta_description = get_post_meta( $post->ID, $prefix . 'single-checkbox', true );
-		if ( 'false' === $meta_description ) {
-			return '';
+		$desc = get_post_meta( $post->ID, $prefix . 'single-checkbox', true );
+		if ( 'false' === $desc ) {
+			echo <<<CSS
+<style type="text/css">
+	.site-description { display: none !important; }
+</style>
+CSS;
 		}
 	}
-	return $description;
 }
-add_filter( 'pre_option_blogdescription', 'customizer_demo_maybe_filter_description', 10, 1 );
+add_action( 'wp_print_footer_scripts' , 'customizer_demo_maybe_hide_description', 10 );
 
 
 function customizer_demo_maybe_filter_header_image( $description = '' ) {
@@ -326,7 +333,8 @@ CSS;
 		}
 	}
 }
-add_action( 'print_footer_scripts' , 'customizer_demo_maybe_change_color', 10 );
+add_action( 'wp_print_footer_scripts' , 'customizer_demo_maybe_change_color', 10 );
+
 
 function customizer_demo_maybe_change_font_size() {
 	if ( true === is_single() ) {
@@ -336,26 +344,31 @@ function customizer_demo_maybe_change_font_size() {
 		if ( 'normal' !== $size ) {
 			if ( 'large' === $size ) {
 				$px = 24;
+				$hpx = 54;
 			}
 			if ( 'xlarge' === $size ) {
 				$px = 32;
+				$hpx = 64;
 			}
 			echo <<<CSS
 <style type="text/css">
-	p { font-size: {$px}px !important; }
+	 .entry-content { font-size: {$px}px !important; }
+     h1 { font-size:{$hpx}px !important;
 </style>
 CSS;
 		}
 	}
 }
-add_action( 'print_footer_scripts' , 'customizer_demo_maybe_change_font_size', 10 );
+add_action( 'wp_print_footer_scripts' , 'customizer_demo_maybe_change_font_size', 10 );
+
+
 
 function customizer_demo_maybe_hide_bar() {
 	if ( true === is_single() ) {
 		$prefix = customizer_demo_prefix();
 		global $post;
 		$bar = get_post_meta( $post->ID, $prefix . 'single-select', true );
-		if ( 'hidden' === $bar ) {
+		if ( 'hiding' === $bar ) {
 			echo <<<CSS
 <style type="text/css">
 	#navbar { display: none !important; }
@@ -364,6 +377,5 @@ CSS;
 		}
 	}
 }
-add_action( 'print_footer_scripts' , 'customizer_demo_maybe_hide_bar', 10 );
-
+add_action( 'wp_print_footer_scripts' , 'customizer_demo_maybe_hide_bar', 10 );
 
