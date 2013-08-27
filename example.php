@@ -91,7 +91,7 @@ function customizer_demo_settings( $settings = array() ) {
 		//radio
 		$key = $prefix . 'single-radio';
 		$value = get_post_meta( $post_id, $key, true );
-		$value = empty( $value ) ? 'one' : $value;
+		$value = empty( $value ) ? 'showing' : $value;
 		$settings[] = array(
 			'slug' => $key,
 			'default' => $value,
@@ -102,7 +102,7 @@ function customizer_demo_settings( $settings = array() ) {
 		//text
 		$key = $prefix . 'single-text';
 		$value = get_post_meta( $post_id, $key, true );
-		$value = empty( $value ) ? 'example text is boring' : $value;
+		$value = empty( $value ) ? bloginfo( 'description' ) : $value;
 		$settings[] = array(
 			'slug' => $key,
 			'default' => $value,
@@ -150,7 +150,7 @@ function customizer_demo_settings( $settings = array() ) {
 			'capability' => 'edit_others_posts',
 			'transport' => 'postMessage'
 		);
-
+		error_log("SETTINGS" . json_encode( $settings ) );
 	}
 	return $settings;
 }
@@ -224,8 +224,8 @@ function customizer_demo_controls( $controls = array() ) {
 			'label' => 'Example Select',
 			'type' => 'select',
 			'choices' => array(
-				'one' => 'Show',
-				'two' => 'Hide'
+				'showing' => 'Show Search Bar',
+				'hiding' => 'Hide Search Bar'
 			),
 			'section' => $prefix . 'single'
 		);
@@ -271,7 +271,7 @@ add_filter( 'customizer_wrapper_save', 'customizer_demo_save', 20, 4 );
 
 /* Templating */
 
-function customizer_demo_maybe_filter_blogname( $title ) {
+function customizer_demo_maybe_filter_blogname( $title = '' ) {
 	if ( true === is_single() ) {
 		global $post;
 		$meta_title = get_post_meta( $post->ID, 'customizer-demo-single-text', true );
@@ -281,21 +281,89 @@ function customizer_demo_maybe_filter_blogname( $title ) {
 	}
 	return $title;
 }
-add_filter( 'pre_option_blogname', 'customizer_demo_maybe_filter_blogname', 10, 1 );
+//add_filter( 'pre_option_blogname', 'customizer_demo_maybe_filter_blogname', 10, 1 );
 
 
-function customizer_demo_maybe_filter_description( $title ) {
+function customizer_demo_maybe_filter_description( $description = '' ) {
 	if ( true === is_single() ) {
 		$prefix = customizer_demo_prefix();
 		global $post;
 		$meta_description = get_post_meta( $post->ID, $prefix . 'single-checkbox', true );
-		error_log("CHECK DESC" . $meta_description );
 		if ( 'false' === $meta_description ) {
 			return '';
 		}
 	}
 	return $description;
 }
-add_filter( 'pre_option_description', 'customizer_demo_maybe_filter_description', 10, 1 );
+add_filter( 'pre_option_blogdescription', 'customizer_demo_maybe_filter_description', 10, 1 );
+
+
+function customizer_demo_maybe_filter_header_image( $description = '' ) {
+	if ( true === is_single() ) {
+		$prefix = customizer_demo_prefix();
+		global $post;
+		$meta_image = get_post_meta( $post->ID, $prefix . 'single-image', true );
+		if ( intval( $meta_image ) > 0 ) {
+			$image = wp_get_attachment_image_src( $meta_image, 'full' );
+			return $image[ 0 ];
+		}
+	}
+	return $description;
+}
+add_filter( 'theme_mod_header_image', 'customizer_demo_maybe_filter_header_image', 10, 1 );
+
+function customizer_demo_maybe_change_color() {
+	if ( true === is_single() ) {
+		$prefix = customizer_demo_prefix();
+		global $post;
+		$color = get_post_meta( $post->ID, $prefix . 'single-color', true );
+		if ( false === empty( $color ) ) {
+			echo <<<CSS
+<style type="text/css">
+	.site-header { background-color: {$color} !important; }
+</style>
+CSS;
+		}
+	}
+}
+add_action( 'print_footer_scripts' , 'customizer_demo_maybe_change_color', 10 );
+
+function customizer_demo_maybe_change_font_size() {
+	if ( true === is_single() ) {
+		$prefix = customizer_demo_prefix();
+		global $post;
+		$size = get_post_meta( $post->ID, $prefix . 'single-radio', true );
+		if ( 'normal' !== $size ) {
+			if ( 'large' === $size ) {
+				$px = 24;
+			}
+			if ( 'xlarge' === $size ) {
+				$px = 32;
+			}
+			echo <<<CSS
+<style type="text/css">
+	p { font-size: {$px}px !important; }
+</style>
+CSS;
+		}
+	}
+}
+add_action( 'print_footer_scripts' , 'customizer_demo_maybe_change_font_size', 10 );
+
+function customizer_demo_maybe_hide_bar() {
+	if ( true === is_single() ) {
+		$prefix = customizer_demo_prefix();
+		global $post;
+		$bar = get_post_meta( $post->ID, $prefix . 'single-select', true );
+		if ( 'hidden' === $bar ) {
+			echo <<<CSS
+<style type="text/css">
+	#navbar { display: none !important; }
+</style>
+CSS;
+		}
+	}
+}
+add_action( 'print_footer_scripts' , 'customizer_demo_maybe_hide_bar', 10 );
 
 
