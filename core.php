@@ -140,7 +140,7 @@ function customizer_wrapper_save( $wp_customize ) {
 		$controls[ $id ] = array( 'control' => $control, 'type' => $type_id );
 		do_action( 'customizer_wrapper_saved_' . $id, $value, $wp_customize, $type, $controls[ $id ] );
 	}
-	do_action( 'customizer_wrapper_save', $data, $data, $type, $controls );
+	do_action( 'customizer_wrapper_save', $data, $wp_customize, $type, $controls );
 }
 add_action( 'customize_save', 'customizer_wrapper_save', 20, 1 );
 
