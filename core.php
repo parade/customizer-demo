@@ -13,6 +13,7 @@
 /* Sections */
 
 function customizer_wrapper_sections( $wp_customize ) {
+	customizer_wrapper_remove_default_sections();
 	$sections  = apply_filters( 'customizer_wrapper_sections', array() );
 	foreach ( $sections as $section ) {
 		$wp_customize->add_section( $section[ 'id' ], array(
