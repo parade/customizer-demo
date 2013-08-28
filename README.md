@@ -1,3 +1,7 @@
+# Wasn't there a slide deck?
+
+https://docs.google.com/presentation/d/1Y6XMzIOWD915y3RoPRmSE0bSx8O5HyhkoB0GenmsD1s/edit?usp=sharing
+
 # How Parade.com uses the WordPress Theme Customizer
 
 > Have you been curious about the WordPress Theme Customizer?
