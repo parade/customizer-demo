@@ -46,7 +46,7 @@ function customizer_demo_sections( $sections = array() ) {
 	if ( 'single' === $preview_type[ 'type' ] ) { 
 
 		$sections[] = array(
-			'slug' => $prefix . 'single',
+			'id' => $prefix . 'single',
 			'title' => 'Customize Post',
 			'priority' => 20
 		);
@@ -78,7 +78,7 @@ function customizer_demo_settings( $settings = array() ) {
 		$value = empty( $value ) ? true : $value;
 		//add the setting to the stack
 		$settings[] = array(
-			'slug' => $key,
+			'id' => $key,
 			'default' => $value,
 			'transport' => 'postMessage',
 			'capability' => 'edit_others_posts'
@@ -93,7 +93,7 @@ function customizer_demo_settings( $settings = array() ) {
 		$value = get_post_meta( $post_id, $key, true );
 		$value = empty( $value ) ? 'showing' : $value;
 		$settings[] = array(
-			'slug' => $key,
+			'id' => $key,
 			'default' => $value,
 			'transport' => 'postMessage',
 			'capability' => 'edit_others_posts'
@@ -104,7 +104,7 @@ function customizer_demo_settings( $settings = array() ) {
 		$value = get_post_meta( $post_id, $key, true );
 		$value = empty( $value ) ? get_bloginfo( 'description' ) : $value;
 		$settings[] = array(
-			'slug' => $key,
+			'id' => $key,
 			'default' => $value,
 			'transport' => 'postMessage',
 			'capability' => 'edit_others_posts'
@@ -115,7 +115,7 @@ function customizer_demo_settings( $settings = array() ) {
 		$value = get_post_meta( $post_id, $key, true );
 		$value = empty( $value ) ? 'showing' : $value; 
 		$settings[] = array(
-			'slug' => $key,
+			'id' => $key,
 			'default' => $value,
 			'transport' => 'postMessage',
 			'capability' => 'edit_others_posts'
@@ -126,7 +126,7 @@ function customizer_demo_settings( $settings = array() ) {
 		$value = get_post_meta( $post_id, $key, true );
 		$value = empty( $value ) ? '#336699' : $value; 
 		$settings[] = array(
-			'slug' => $key,
+			'id' => $key,
 			'default' => $value,
 			'transport' => 'postMessage',
 			'capability' => 'edit_others_posts'
@@ -145,7 +145,7 @@ function customizer_demo_settings( $settings = array() ) {
 		}
 
 		$settings[] = array(
-			'slug' => $key,
+			'id' => $key,
 			'default' => $value,
 			'capability' => 'edit_others_posts',
 			'transport' => 'postMessage'
@@ -168,7 +168,7 @@ function customizer_demo_controls( $controls = array() ) {
 		
 		//text
 		$controls[] = array(
-			'slug' => $prefix . 'single-text',
+			'id' => $prefix . 'single-text',
 			'settings' => $prefix . 'single-text',
 			'label' => 'Sitename',
 			'type' => 'text',
@@ -177,7 +177,7 @@ function customizer_demo_controls( $controls = array() ) {
 
 		//checkbox
 		$controls[] = array(
-			'slug' => $prefix . 'single-checkbox',
+			'id' => $prefix . 'single-checkbox',
 			'settings' => $prefix . 'single-checkbox',
 			'label' => 'Header Description',
 			'type' => 'checkbox',
@@ -187,7 +187,7 @@ function customizer_demo_controls( $controls = array() ) {
 
 		//image
 		$controls[] = array(
-			'slug' => $prefix . 'single-image',
+			'id' => $prefix . 'single-image',
 			'settings' => $prefix . 'single-image',
 			'label' => 'Header Image',
 			'type' => 'image',
@@ -196,7 +196,7 @@ function customizer_demo_controls( $controls = array() ) {
 
 		//color
 		$controls[] = array(
-			'slug' => $prefix . 'single-color',
+			'id' => $prefix . 'single-color',
 			'settings' => $prefix . 'single-color',
 			'label' => 'Header Color',
 			'type' => 'color',
@@ -205,7 +205,7 @@ function customizer_demo_controls( $controls = array() ) {
 
 		//radio
 		$controls[] = array(
-			'slug' => $prefix . 'single-radio',
+			'id' => $prefix . 'single-radio',
 			'settings' => $prefix . 'single-radio',
 			'label' => 'Font size',
 			'type' => 'radio',
@@ -219,7 +219,7 @@ function customizer_demo_controls( $controls = array() ) {
 
 		//select
 		$controls[] = array(
-			'slug' => $prefix . 'single-select',
+			'id' => $prefix . 'single-select',
 			'settings' => $prefix . 'single-select',
 			'label' => 'Example Select',
 			'type' => 'select',
@@ -242,13 +242,13 @@ function customizer_demo_save( $data, $wp_customize, $type, $controls ) {
 	$type = customizer_wrapper_preview_type();
 	$prefix = customizer_demo_prefix();
 	if ( 'single' === $type[ 'type' ] ) {
-		foreach ( $data as $slug => $value ) {
-			$item = $controls[ $slug ];
+		foreach ( $data as $id => $value ) {
+			$item = $controls[ $id ];
 			//say you wanted to pull data from the original control
 			//$control = $item[ 'control' ];
 			//$default = $control->settings[ 'default' ]->default;
 			$delete = false;
-			if ( $prefix . 'single-image' === $slug ) {
+			if ( $prefix . 'single-image' === $id ) {
 				$attachment = customizer_wrapper_attachment_by_url( $value );
 				if ( null !== $attachment ) {
 					$value = $attachment->ID;
@@ -261,10 +261,9 @@ function customizer_demo_save( $data, $wp_customize, $type, $controls ) {
 			}
 		
 			if ( true === empty( $value ) ) {
-				delete_post_meta( $type[ 'id' ], $slug );				
+				delete_post_meta( $type[ 'id' ], $id );				
 			} else {
-				error_log("UPDATE $slug");
-				update_post_meta( $type[ 'id' ], $slug, $value );
+				update_post_meta( $type[ 'id' ], $id, $value );
 			}
 		}
 	}

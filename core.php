@@ -15,7 +15,7 @@
 function customizer_wrapper_sections( $wp_customize ) {
 	$sections  = apply_filters( 'customizer_wrapper_sections', array() );
 	foreach ( $sections as $section ) {
-		$wp_customize->add_section( $section[ 'slug' ], array(
+		$wp_customize->add_section( $section[ 'id' ], array(
 			'title' => empty( $section[ 'title' ] ) ? null : $section[ 'title' ],
 			'theme_supports' => empty( $section[ 'theme_supports' ] ) ? null : $section[ 'theme_supports' ],
 			'priority' => empty( $section[ 'priority' ] ) ? null : $section[ 'priority' ]
@@ -44,7 +44,7 @@ function customizer_wrapper_settings( $wp_customize ) {
 	customizer_wrapper_remove_default_settings();
 	$settings = apply_filters( 'customizer_wrapper_settings', array() );
 	foreach ( $settings as $setting ) {
-		$wp_customize->add_setting( $setting[ 'slug' ], array(
+		$wp_customize->add_setting( $setting[ 'id' ], array(
 			'default' => empty( $setting[ 'default' ] ) ? null : $setting[ 'default' ],
 			'transport' => empty( $setting[ 'transport' ] ) ? null : $setting[ 'transport' ],
 			'capability' => empty( $setting[ 'capability' ] ) ? null : $setting[ 'capability' ],
@@ -94,7 +94,7 @@ function customizer_wrapper_controls( $wp_customize ) {
 				)
 			) );
 		} else {
-			$wp_customize->add_control( $control[ 'slug' ], array(
+			$wp_customize->add_control( $control[ 'id' ], array(
 				'settings' => empty( $control[ 'settings' ] ) ? null : $control[ 'settings' ],
 				'label' => empty( $control[ 'label' ] ) ? null : $control[ 'label' ],
 				'section' => empty( $control[ 'section' ] ) ? null : $control[ 'section' ],
@@ -125,20 +125,20 @@ function customizer_wrapper_save( $wp_customize ) {
 	$data = get_object_vars( json_decode( stripslashes( $_POST[ 'customized' ] ) ) );
 	$type = customizer_wrapper_preview_type();
 	$controls = array();
-	foreach ( $data as $slug => $value ) {
-		$type_slug = null;
+	foreach ( $data as $id => $value ) {
+		$type_id = null;
 		if ( is_a( $control, 'WP_Customize_Image_Control' ) ) {
-			$type_slug = 'image';
+			$type_id = 'image';
 		} else if ( is_a( $control, 'WP_Customize_Color_Control' ) ) {
-			$type_slug = 'color';
+			$type_id = 'color';
 		} else {
 			if ( isset( $control->type ) ) {
-				$type_slug = $control->type;
+				$type_id = $control->type;
 			}
 		}
-		$control = $wp_customize->get_control( $slug );
-		$controls[ $slug ] = array( 'control' => $control, 'type' => $type_slug );
-		do_action( 'customizer_wrapper_saved_' . $slug, $value, $wp_customize, $type, $controls[ $slug ] );
+		$control = $wp_customize->get_control( $id );
+		$controls[ $id ] = array( 'control' => $control, 'type' => $type_id );
+		do_action( 'customizer_wrapper_saved_' . $id, $value, $wp_customize, $type, $controls[ $id ] );
 	}
 	do_action( 'customizer_wrapper_save', $data, $data, $type, $controls );
 }
