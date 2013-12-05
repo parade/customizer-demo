@@ -1,6 +1,6 @@
 # Wasn't there a slide deck?
 
-https://docs.google.com/presentation/d/1Y6XMzIOWD915y3RoPRmSE0bSx8O5HyhkoB0GenmsD1s/edit?usp=sharing
+http://www.parade.com/customizer
 
 # How Parade.com uses the WordPress Theme Customizer
 
